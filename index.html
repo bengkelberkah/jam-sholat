@@ -3,256 +3,117 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Aplikasi Jam Sholat Online</title>
+<title>Jam Sholat Ringan</title>
 <style>
 body {
-  font-family: sans-serif;
-  background: #0b1220;
-  color: #fff;
-  padding: 20px;
-}
-.card {
-  background: #121a2b;
+  font-family: 'Arial', sans-serif;
+  background: #000;
+  color: #0f0;
+  text-align: center;
+  margin: 0;
   padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
 }
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+h1 {font-size: 1.3em; color: #0ff;}
+#clock {font-size: 2.5em; margin: 10px 0; font-weight: bold;}
+#timeleft {font-size: 1.3em; margin-bottom: 15px;}
+#nextPrayer {font-size: 1.1em; color: #fff;}
+table {width: 100%; color: #0f0; font-size: 0.9em; border-collapse: collapse; margin-top: 10px;}
+td, th {border: 1px solid #0f0; padding: 5px;}
+button {background: #0f0; color: #000; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;}
+button:active {background: #0c0;}
+input, select {
+  margin: 5px; padding: 5px;
+  width: 90%; border-radius: 5px;
+  border: 1px solid #0f0; background: #000; color: #0f0;
 }
-button.primary {
-  background: #22c55e;
-  color: #072b16;
-  font-weight: bold;
-}
-.alert {
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 8px;
-}
-.alert.error {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-}
-.alert.info {
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.35);
-}
-#clock {
-  font-size: 1.5em;
-  margin: 10px 0;
-}
-#timeleft {
-  font-size: 1.5em;
-  color: #9ab0c9;
-  margin-top: 4px;
-  font-weight: bold;
-}
+.small {font-size: 0.8em; color: #888;}
 </style>
 </head>
 <body>
-<h1>🕌 Aplikasi Jam Sholat</h1>
-<p>Pilih lokasi manual menggunakan Kota & Negara atau masukkan Koordinat.</p>
-
+<h1>🕌 JAM SHOLAT</h1>
 <div id="clock">00:00:00</div>
 <div id="timeleft">Menunggu data...</div>
+<div id="nextPrayer"></div>
 
-<div class="card">
-  <label>Kota</label>
-  <input id="city" placeholder="Contoh: Bandung" />
-  <label>Negara</label>
-  <input id="country" placeholder="Contoh: Indonesia" />
-  <label>Latitude</label>
-  <input id="lat" placeholder="Contoh: -6.9147" />
-  <label>Longitude</label>
-  <input id="lon" placeholder="Contoh: 107.6098" />
-
-  <label>Metode Perhitungan</label>
+<div>
+  <input id="city" placeholder="Kota (contoh: Bandung)" />
+  <input id="country" placeholder="Negara (contoh: Indonesia)" />
   <select id="method">
-    <option value="12">Syafi'i (University of Islamic Sciences, Karachi)</option>
-    <option value="1">Hanafi (Muslim World League)</option>
-    <option value="3">Islamic Modern (ISNA)</option>
-    <option value="4">Umm Al-Qura, Makkah</option>
+    <option value="12">Syafi'i (Karachi)</option>
+    <option value="1">Hanafi (MWL)</option>
+    <option value="3">ISNA</option>
+    <option value="4">Umm Al-Qura</option>
   </select>
-
-  <label>Madhab (Ashar)</label>
-  <select id="madhab">
-    <option value="0">Shafi'i</option>
-    <option value="1">Hanafi</option>
-  </select>
-
-  <h3>Penyesuaian (menit)</h3>
-  <p><small>Tambahkan atau kurangi menit untuk menyesuaikan waktu sholat sesuai preferensi lokal.</small></p>
-
-  <label>Fajr</label><input id="adjFajr" type="number" value="0" />
-  <label>Dhuhr</label><input id="adjDhuhr" type="number" value="0" />
-  <label>Asr</label><input id="adjAsr" type="number" value="0" />
-  <label>Maghrib</label><input id="adjMaghrib" type="number" value="0" />
-  <label>Isha</label><input id="adjIsha" type="number" value="0" />
-
-  <button class="primary" id="btnLoad">Tampilkan Waktu</button>
+  <button id="btnLoad">Muat Waktu</button>
 </div>
 
-<div id="alert" class="alert info" style="display:none"></div>
-<table id="times" style="width:100%;color:#9ab0c9;margin-top:10px"></table>
+<table id="times"></table>
+<p class="small">Auto update setiap hari & kirim ke M5 setiap detik</p>
 
 <script>
 const el = id => document.getElementById(id);
-const alertBox = el('alert');
-function showAlert(type, msg) {
-  alertBox.className = 'alert ' + type;
-  alertBox.style.display = 'block';
-  alertBox.textContent = msg;
-}
-function clearAlert() {
-  alertBox.style.display = 'none';
-}
-function stripTZ(s) {
-  return (s || '').toString().match(/\d{1,2}:\d{2}/)?.[0] || s;
-}
-function composeDateTime(timeStr) {
-  const [h, m] = stripTZ(timeStr).split(':').map(Number);
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h || 0, m || 0, 0);
-}
-function adjustTime(timeStr, offset) {
-  const dt = composeDateTime(timeStr);
-  dt.setMinutes(dt.getMinutes() + offset);
-  return `${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
-}
-function computeNext(t) {
-  const order = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
-  const now = Date.now();
-  for (const key of order) {
-    const dt = composeDateTime(t[key]);
-    if (dt.getTime() > now + 1000) return {key, at: dt};
-  }
-  const tomorrow = new Date(Date.now() + 86400000);
-  const [h,m] = stripTZ(t['Fajr']).split(':').map(Number);
-  const dt = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), h||0, m||0, 0);
-  return {key:'Fajr', at:dt};
-}
-
-async function fetchByCity(city,country,method,madhab){
-  const url=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}&madhab=${madhab}`;
-  const r=await fetch(url);
-  const j=await r.json();
-  if(j.code!==200) throw new Error('Gagal mengambil data');
-  return j.data;
-}
-
-async function fetchByCoords(lat,lon,method,madhab){
-  const url=`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=${method}&madhab=${madhab}`;
-  const r=await fetch(url);
-  const j=await r.json();
-  if(j.code!==200) throw new Error('Gagal mengambil data');
-  return j.data;
-}
-
-function applyAdjustments(t){
-  return {
-    Fajr:adjustTime(t.Fajr,Number(el('adjFajr').value||0)),
-    Sunrise:t.Sunrise,
-    Dhuhr:adjustTime(t.Dhuhr,Number(el('adjDhuhr').value||0)),
-    Asr:adjustTime(t.Asr,Number(el('adjAsr').value||0)),
-    Maghrib:adjustTime(t.Maghrib,Number(el('adjMaghrib').value||0)),
-    Isha:adjustTime(t.Isha,Number(el('adjIsha').value||0))
-  };
-}
-
 let currentClock = '00:00:00';
 let currentCountdown = '00:00:00';
 let nextPrayerName = '-';
-
-function updateClock() {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2,'0');
-  const m = String(now.getMinutes()).padStart(2,'0');
-  const s = String(now.getSeconds()).padStart(2,'0');
-  currentClock = `${h}:${m}:${s}`;
-  el('clock').textContent = `Waktu sekarang: ${currentClock}`;
-}
-setInterval(updateClock, 1000);
-
-function updateTimeLeft(next) {
-  const now = new Date();
-  const diff = next.at - now;
-  if (diff <= 0) {
-    el('timeleft').textContent = 'Sudah masuk waktu sholat berikutnya.';
-    return;
-  }
-  const totalSeconds = Math.floor(diff / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  currentCountdown = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  el('timeleft').textContent = `Menuju ${next.key}: ${currentCountdown}`;
-  nextPrayerName = next.key;
-}
-
+let lastData = null;
 let countdownInterval;
 
+const M5CORE_URL = "http://192.168.0.150/update"; // ubah ke IP M5Core Ink kamu
+
+function stripTZ(s) {return (s||'').toString().match(/\d{1,2}:\\d{2}/)?.[0] || s;}
+function composeDateTime(t){const [h,m]=stripTZ(t).split(':').map(Number);const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),h,m,0);}
+function adjustTime(t,o){const d=composeDateTime(t);d.setMinutes(d.getMinutes()+o);return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
+function computeNext(t){const k=['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];const now=Date.now();for(const key of k){const d=composeDateTime(t[key]);if(d.getTime()>now)return{key,at:d};}const tm=new Date(Date.now()+86400000);const[h,m]=stripTZ(t['Fajr']).split(':').map(Number);return{key:'Fajr',at:new Date(tm.getFullYear(),tm.getMonth(),tm.getDate(),h,m,0)};}
+
+async function fetchByCity(city,country,method){const url=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}`;const r=await fetch(url);const j=await r.json();if(j.code!==200)throw new Error('Gagal ambil data');return j.data;}
+
+function updateClock(){
+  const n=new Date();const h=String(n.getHours()).padStart(2,'0');const m=String(n.getMinutes()).padStart(2,'0');const s=String(n.getSeconds()).padStart(2,'0');
+  currentClock=`${h}:${m}:${s}`;el('clock').textContent=currentClock;
+}
+setInterval(updateClock,1000);
+
+function updateTimeLeft(next){
+  const now=new Date();const diff=next.at-now;if(diff<=0){el('timeleft').textContent='Masuk waktu sholat berikutnya';return;}
+  const t=Math.floor(diff/1000),h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=t%60;
+  currentCountdown=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el('timeleft').textContent=`Menuju ${next.key}: ${currentCountdown}`;
+  el('nextPrayer').textContent=`Sholat berikutnya: ${next.key}`;
+  nextPrayerName=next.key;
+}
+
 function updateUI(data){
-  let t=data.timings;
-  t=applyAdjustments(t);
-  let html='<tr><th>Waktu</th><th>Jam</th></tr>';
+  lastData=data;
+  const t=data.timings;
+  let html='<tr><th>Sholat</th><th>Waktu</th></tr>';
   for(const [k,v] of Object.entries(t)){
     html+=`<tr><td>${k}</td><td>${stripTZ(v)}</td></tr>`;
   }
   el('times').innerHTML=html;
-  showAlert('info','Jadwal berhasil dimuat.');
   const next=computeNext(t);
   clearInterval(countdownInterval);
   updateTimeLeft(next);
-  countdownInterval=setInterval(()=>{
-    updateTimeLeft(next);
-    sendToM5(); // kirim data ke M5
-  },1000);
+  countdownInterval=setInterval(()=>{updateTimeLeft(next);sendToM5();},1000);
 }
-
-// 🔗 Fungsi kirim ke M5Core Ink lewat internet
-const M5CORE_URL = "http://192.168.0.150/update"; // ubah ke IP M5Core Ink kamu atau URL ngrok
 
 async function sendToM5(){
-  try {
-    const payload = { 
-      clock: currentClock,
-      countdown: currentCountdown,
-      next: nextPrayerName
-    };
-    await fetch(M5CORE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {
-    console.log("Gagal kirim ke M5:", err);
-  }
+  try{
+    const payload={clock:currentClock,countdown:currentCountdown,next:nextPrayerName};
+    await fetch(M5CORE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  }catch(e){console.log('Gagal kirim ke M5:',e);}
 }
 
-el('btnLoad').addEventListener('click', async ()=>{
-  clearAlert();
-  const city=el('city').value.trim();
-  const country=el('country').value.trim();
-  const lat=el('lat').value.trim();
-  const lon=el('lon').value.trim();
-  const method=el('method').value;
-  const madhab=el('madhab').value;
-  try {
-    let data;
-    if(city && country) data = await fetchByCity(city,country,method,madhab);
-    else if(lat && lon){
-      const latNum=Number(lat), lonNum=Number(lon);
-      if(Number.isNaN(latNum)||Number.isNaN(lonNum)) throw new Error('Koordinat tidak valid.');
-      data=await fetchByCoords(latNum,lonNum,method,madhab);
-    } else throw new Error('Isi Kota & Negara atau Koordinat.');
-    updateUI(data);
-  } catch(e){
-    showAlert('error', e.message || 'Terjadi kesalahan.');
-  }
+// auto refresh jadwal setiap 24 jam
+setInterval(async()=>{
+  if(!lastData)return;
+  const c=el('city').value.trim(),cn=el('country').value.trim(),m=el('method').value;
+  if(c&&cn){try{const d=await fetchByCity(c,cn,m);updateUI(d);}catch(e){console.log('Auto-refresh gagal:',e);}}
+},86400000);
+
+el('btnLoad').addEventListener('click',async()=>{
+  const c=el('city').value.trim(),cn=el('country').value.trim(),m=el('method').value;
+  if(!c||!cn){alert('Isi Kota dan Negara!');return;}
+  try{const d=await fetchByCity(c,cn,m);updateUI(d);}catch(e){alert('Gagal ambil data.');}
 });
 </script>
 </body>
