@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Jam Sholat Sinkron Firebase</title>
+<title>Jam Sholat Firebase + M5Core Ink</title>
 <style>
 body {
   font-family: "Courier New", monospace;
@@ -142,7 +142,7 @@ th {
 </div>
 
 <table id="times"></table>
-<p class="small">Data otomatis tersinkron antar perangkat melalui Firebase</p>
+<p class="small">Data otomatis tersinkron antar perangkat & M5Core Ink melalui Firebase</p>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
@@ -186,11 +186,15 @@ function applyAdjustments(t){
   };
 }
 
-function updateClock(){
+function updateClockAndPush(){
   const n=new Date();
-  el('clock').textContent = "Waktu sekarang: " + n.toLocaleTimeString('id-ID', { hour12:false });
+  const h=String(n.getHours()).padStart(2,'0');
+  const m=String(n.getMinutes()).padStart(2,'0');
+  const s=String(n.getSeconds()).padStart(2,'0');
+  el('clock').textContent = "Waktu sekarang: " + h+":"+m+":"+s;
+  set(ref(db, 'display/clock'), h+":"+m+":"+s);
 }
-setInterval(updateClock,1000);
+setInterval(updateClockAndPush,1000);
 
 function updateTimeLeft(next){
   const now=new Date();
@@ -200,6 +204,12 @@ function updateTimeLeft(next){
   const txt=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   el('timeleft').textContent=txt;
   el('nextPrayer').textContent=`Sholat berikutnya: ${next.key}`;
+  // Kirim ke Firebase node display/
+  set(ref(db, 'display/'), {
+    nextPrayer: next.key,
+    countdown: txt,
+    clock: el('clock').textContent.replace('Waktu sekarang: ','')
+  });
 }
 
 function updateUI(data){
