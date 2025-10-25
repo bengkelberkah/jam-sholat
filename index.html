@@ -3,73 +3,108 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🕌 Aplikasi Jam Sholat</title>
+<title>Jam Sholat Sinkron Firebase</title>
 <style>
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f8fafc;
-  color: #222;
+  font-family: "Courier New", monospace;
+  background: #000;
+  color: #00ff7f;
+  margin: 0;
   padding: 20px;
+  text-align: center;
 }
-.card {
-  background: #fff;
-  padding: 15px;
-  border-radius: 10px;
+h1 {
+  color: #00ff7f;
+  font-size: 1.4em;
+  border-bottom: 1px solid #00ff7f;
+  display: inline-block;
+  padding-bottom: 4px;
   margin-bottom: 15px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  background: #22c55e;
-  color: white;
-  font-weight: bold;
-}
-.alert {
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 8px;
-}
-.alert.error {
-  background: rgba(239,68,68,.1);
-  border: 1px solid rgba(239,68,68,.3);
-}
-.alert.info {
-  background: rgba(59,130,246,.1);
-  border: 1px solid rgba(59,130,246,.3);
+#nextPrayer {
+  font-size: 1.1em;
+  color: #80ffb3;
+  margin-bottom: 5px;
 }
 #timeleft {
   font-size: 3em;
-  color: #16a34a;
+  color: #00ff9d;
   font-weight: bold;
-  text-align: center;
-  opacity: 1;
+  margin: 10px 0;
   transition: opacity 0.6s ease;
 }
 #clock {
   font-size: 1.2em;
-  text-align: center;
+  color: #00ff7f;
   margin-top: 5px;
-  color: #555;
 }
-h1 {
-  text-align: center;
+.card {
+  border: 1px solid #00ff7f;
+  border-radius: 10px;
+  padding: 15px;
+  background: rgba(0, 255, 127, 0.05);
+  max-width: 420px;
+  margin: 15px auto;
+  text-align: left;
+}
+label {
+  font-weight: bold;
+  color: #00ff7f;
+  display: block;
+  margin-top: 8px;
+}
+input, select {
+  width: 100%;
+  padding: 7px;
+  margin-top: 4px;
+  border: 1px solid #00ff7f;
+  border-radius: 5px;
+  background: #000;
+  color: #00ff7f;
+  font-size: 0.9em;
+}
+button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 10px;
+  border: 1px solid #00ff7f;
+  border-radius: 6px;
+  background: #001a0a;
+  color: #00ff7f;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:hover {
+  background: #003319;
 }
 table {
   width: 100%;
-  color: #333;
-  margin-top: 10px;
+  max-width: 420px;
+  margin: 20px auto;
   border-collapse: collapse;
+  border: 1px solid #00ff7f;
 }
-table td, table th {
-  padding: 4px 6px;
+th, td {
+  border: 1px solid #00ff7f;
+  padding: 6px;
+  text-align: center;
+  color: #baffd9;
+}
+th {
+  background: #003319;
+  color: #00ff7f;
+}
+.small {
+  font-size: 0.8em;
+  color: #00cc66;
+  margin-top: 10px;
 }
 </style>
 </head>
 <body>
-<h1>🕌 Aplikasi Jam Sholat</h1>
+<h1>🕌 JAM SHOLAT ONLINE</h1>
+
+<div id="nextPrayer">Menunggu data...</div>
 <div id="timeleft">00:00:00</div>
 <div id="clock">00:00:00</div>
 
@@ -82,136 +117,179 @@ table td, table th {
   <input id="lat" placeholder="Contoh: -6.9147" />
   <label>Longitude</label>
   <input id="lon" placeholder="Contoh: 107.6098" />
+
   <label>Metode Perhitungan</label>
   <select id="method">
-    <option value="12">Syafi'i (University of Islamic Sciences, Karachi)</option>
-    <option value="1">Hanafi (Muslim World League)</option>
-    <option value="3">Islamic Modern (ISNA)</option>
-    <option value="4">Umm Al-Qura, Makkah</option>
+    <option value="12">Syafi'i (Karachi)</option>
+    <option value="1">Hanafi (MWL)</option>
+    <option value="3">ISNA</option>
+    <option value="4">Umm Al-Qura</option>
   </select>
-  <label>Madhab (Ashar)</label>
+
+  <label>Madhab (Asar)</label>
   <select id="madhab">
     <option value="0">Shafi'i</option>
     <option value="1">Hanafi</option>
   </select>
-  <h3>Penyesuaian (menit)</h3>
-  <small>Tambahkan/kurangi menit untuk menyesuaikan waktu sholat lokal</small><br>
+
+  <h3>Penyesuaian Waktu (menit)</h3>
   <label>Fajr</label><input id="adjFajr" type="number" value="0" />
   <label>Dhuhr</label><input id="adjDhuhr" type="number" value="0" />
   <label>Asr</label><input id="adjAsr" type="number" value="0" />
   <label>Maghrib</label><input id="adjMaghrib" type="number" value="0" />
   <label>Isha</label><input id="adjIsha" type="number" value="0" />
-  <button id="btnLoad">Tampilkan Waktu</button>
+
+  <button id="btnLoad">Tampilkan & Simpan</button>
 </div>
 
-<div id="alert" class="alert info" style="display:none"></div>
 <table id="times"></table>
+<p class="small">Data otomatis tersinkron & dikirim ke M5 Core Ink via Firebase</p>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBdkkgnyBXUBBCYszktz8SRxfQ5COtjqfI",
+  authDomain: "jam-sholat-2893a.firebaseapp.com",
+  databaseURL: "https://jam-sholat-2893a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jam-sholat-2893a",
+  storageBucket: "jam-sholat-2893a.firebasestorage.app",
+  messagingSenderId: "486960845021",
+  appId: "1:486960845021:web:426d01bde35cc75dc58b34",
+  measurementId: "G-P9PCD5FRPJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 const el = id => document.getElementById(id);
-const alertBox = el('alert');
-let countdownInterval;
+let countdownInterval, currentNext = null;
 
-function showAlert(type, msg) {
-  alertBox.className = 'alert ' + type;
-  alertBox.style.display = 'block';
-  alertBox.textContent = msg;
-}
-function clearAlert() { alertBox.style.display = 'none'; }
 function stripTZ(s){return (s||'').toString().match(/\d{1,2}:\d{2}/)?.[0]||s;}
-function composeDateTime(timeStr){const [h,m]=stripTZ(timeStr).split(':').map(Number);const now=new Date();return new Date(now.getFullYear(),now.getMonth(),now.getDate(),h||0,m||0,0);}
-function adjustTime(timeStr,offset){const dt=composeDateTime(timeStr);dt.setMinutes(dt.getMinutes()+offset);return `${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;}
-function computeNext(t){const order=['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];const now=Date.now();for(const key of order){const dt=composeDateTime(t[key]);if(dt.getTime()>now+1000)return{key,at:dt};}const tomorrow=new Date(Date.now()+86400000);const [h,m]=stripTZ(t['Fajr']).split(':').map(Number);const dt=new Date(tomorrow.getFullYear(),tomorrow.getMonth(),tomorrow.getDate(),h||0,m||0,0);return{key:'Fajr',at:dt};}
-async function fetchByCity(city,country,method,madhab){const url=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}&madhab=${madhab}`;const r=await fetch(url);const j=await r.json();if(j.code!==200)throw new Error('Gagal mengambil data');return j.data;}
-async function fetchByCoords(lat,lon,method,madhab){const url=`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=${method}&madhab=${madhab}`;const r=await fetch(url);const j=await r.json();if(j.code!==200)throw new Error('Gagal mengambil data');return j.data;}
-function applyAdjustments(t){return{
-  Fajr:adjustTime(t.Fajr,Number(el('adjFajr').value||0)),
-  Sunrise:t.Sunrise,
-  Dhuhr:adjustTime(t.Dhuhr,Number(el('adjDhuhr').value||0)),
-  Asr:adjustTime(t.Asr,Number(el('adjAsr').value||0)),
-  Maghrib:adjustTime(t.Maghrib,Number(el('adjMaghrib').value||0)),
-  Isha:adjustTime(t.Isha,Number(el('adjIsha').value||0))
-};}
+function composeDateTime(t){const[h,m]=stripTZ(t).split(':').map(Number);const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),h,m,0);}
+function adjustTime(t,o){const d=composeDateTime(t);d.setMinutes(d.getMinutes()+o);return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
+function computeNext(t){const k=['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];const now=Date.now();for(const key of k){const d=composeDateTime(t[key]);if(d.getTime()>now)return{key,at:d};}const tm=new Date(Date.now()+86400000);const[h,m]=stripTZ(t['Fajr']).split(':').map(Number);return{key:'Fajr',at:new Date(tm.getFullYear(),tm.getMonth(),tm.getDate(),h,m,0)};}
+
+async function fetchByCity(city,country,method,madhab){
+  const url=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}&madhab=${madhab}`;
+  const r=await fetch(url);const j=await r.json();if(j.code!==200)throw new Error('Gagal ambil data');return j.data;
+}
+
+function applyAdjustments(t){
+  return {
+    Fajr:adjustTime(t.Fajr,Number(el('adjFajr').value||0)),
+    Sunrise:t.Sunrise,
+    Dhuhr:adjustTime(t.Dhuhr,Number(el('adjDhuhr').value||0)),
+    Asr:adjustTime(t.Asr,Number(el('adjAsr').value||0)),
+    Maghrib:adjustTime(t.Maghrib,Number(el('adjMaghrib').value||0)),
+    Isha:adjustTime(t.Isha,Number(el('adjIsha').value||0))
+  };
+}
+
 function updateClock(){
-  const now=new Date();
-  const h=String(now.getHours()).padStart(2,'0');
-  const m=String(now.getMinutes()).padStart(2,'0');
-  const s=String(now.getSeconds()).padStart(2,'0');
-  el('clock').textContent=`${h}:${m}:${s}`;
+  const n=new Date();
+  el('clock').textContent = "Waktu sekarang: " + n.toLocaleTimeString('id-ID', { hour12:false });
 }
 setInterval(updateClock,1000);
 
-// efek fade
-function fadeOut(element, duration=500){element.style.transition=`opacity ${duration}ms`;element.style.opacity=0;}
-function fadeIn(element, duration=500){element.style.transition=`opacity ${duration}ms`;element.style.opacity=1;}
+function fadeOut(e,d=600){e.style.transition=`opacity ${d}ms`;e.style.opacity=0;}
+function fadeIn(e,d=600){e.style.transition=`opacity ${d}ms`;e.style.opacity=1;}
 
-function updateTimeLeft(next, t) {
-  const now = new Date();
-  const diff = next.at - now;
+// === PUSH DATA DISPLAY KE FIREBASE ===
+function pushDisplay(next, countdown){
+  const now = new Date().toLocaleTimeString('id-ID', { hour12:false });
+  set(ref(db,'display/'),{
+    nextPrayer: next?.key || '--',
+    countdown: countdown,
+    clock: now
+  });
+}
 
-  if (diff <= 0) {
-    el('timeleft').textContent = "00:00:00";
-    // tunggu 1 menit baru ganti jadwal berikutnya
-    setTimeout(() => {
-      fadeOut(el('timeleft'), 600);
-      setTimeout(() => {
-        const newNext = computeNext(t);
+function updateTimeLeft(next, t){
+  const now=new Date();
+  const diff=next.at-now;
+  if(diff<=0){
+    el('timeleft').textContent='00:00:00';
+    pushDisplay(next,'00:00:00');
+    setTimeout(()=>{
+      fadeOut(el('timeleft'),600);
+      setTimeout(()=>{
+        const newNext=computeNext(t);
         clearInterval(countdownInterval);
-        fadeIn(el('timeleft'), 600);
+        fadeIn(el('timeleft'),600);
         updateTimeLeft(newNext, t);
-        countdownInterval = setInterval(() => updateTimeLeft(newNext, t), 1000);
-      }, 800);
-    }, 60000);
+        countdownInterval=setInterval(()=>updateTimeLeft(newNext,t),1000);
+      },800);
+    },60000);
     return;
   }
-
-  const totalSeconds = Math.floor(diff / 1000);
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  const formatted = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  el('timeleft').textContent = formatted;
+  const tsec=Math.floor(diff/1000);
+  const h=Math.floor(tsec/3600);
+  const m=Math.floor((tsec%3600)/60);
+  const s=tsec%60;
+  const txt=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el('timeleft').textContent=txt;
+  el('nextPrayer').textContent=`Sholat berikutnya: ${next.key}`;
+  pushDisplay(next, txt);
 }
 
 function updateUI(data){
-  let t = data.timings;
-  t = applyAdjustments(t);
-  let html='<tr><th>Waktu</th><th>Jam</th></tr>';
-  for(const [k,v] of Object.entries(t)){
-    html+=`<tr><td>${k}</td><td>${stripTZ(v)}</td></tr>`;
-  }
+  let t=data.timings;
+  t=applyAdjustments(t);
+  let html='<tr><th>Sholat</th><th>Waktu</th></tr>';
+  for(const [k,v] of Object.entries(t)){html+=`<tr><td>${k}</td><td>${stripTZ(v)}</td></tr>`;}
   el('times').innerHTML=html;
-  showAlert('info','Jadwal berhasil dimuat.');
-
-  const next = computeNext(t);
+  const next=computeNext(t);
+  currentNext = next;
   clearInterval(countdownInterval);
   updateTimeLeft(next, t);
   countdownInterval=setInterval(()=>updateTimeLeft(next, t),1000);
 }
 
-el('btnLoad').addEventListener('click', async () => {
-  clearAlert();
-  const city = el('city').value.trim();
-  const country = el('country').value.trim();
-  const lat = el('lat').value.trim();
-  const lon = el('lon').value.trim();
-  const method = el('method').value;
-  const madhab = el('madhab').value;
+// === Simpan setting ke Firebase ===
+async function saveToFirebase(){
+  const data={
+    city:el('city').value.trim(),
+    country:el('country').value.trim(),
+    lat:el('lat').value.trim(),
+    lon:el('lon').value.trim(),
+    method:el('method').value,
+    madhab:el('madhab').value,
+    adjFajr:el('adjFajr').value,
+    adjDhuhr:el('adjDhuhr').value,
+    adjAsr:el('adjAsr').value,
+    adjMaghrib:el('adjMaghrib').value,
+    adjIsha:el('adjIsha').value
+  };
+  await set(ref(db,'settings/'),data);
+}
 
-  try {
+// === Sync realtime dari Firebase ===
+onValue(ref(db,'settings/'), async (snapshot)=>{
+  const s=snapshot.val();
+  if(!s)return;
+  for(const [k,v] of Object.entries(s)){if(el(k))el(k).value=v;}
+  try{
     let data;
-    if (city && country) data = await fetchByCity(city, country, method, madhab);
-    else if (lat && lon) {
-      const latNum = Number(lat), lonNum = Number(lon);
-      if (Number.isNaN(latNum) || Number.isNaN(lonNum))
-        throw new Error('Koordinat tidak valid.');
-      data = await fetchByCoords(latNum, lonNum, method, madhab);
-    } else throw new Error('Isi Kota & Negara atau Koordinat.');
-
+    if(s.city && s.country) data=await fetchByCity(s.city,s.country,s.method,s.madhab);
     updateUI(data);
-  } catch (e) {
-    showAlert('error', e.message || 'Terjadi kesalahan.');
-  }
+  }catch(e){console.error('Gagal ambil data:',e);}
+});
+
+// === Tombol klik: simpan & tampilkan ===
+el('btnLoad').addEventListener('click', async ()=>{
+  await saveToFirebase();
+  const s={
+    city:el('city').value.trim(),
+    country:el('country').value.trim(),
+    method:el('method').value,
+    madhab:el('madhab').value
+  };
+  let data;
+  if(s.city&&s.country)data=await fetchByCity(s.city,s.country,s.method,s.madhab);
+  updateUI(data);
+  alert('✅ Setting tersimpan, dikirim ke Firebase & disinkronkan ke semua perangkat!');
 });
 </script>
 </body>
