@@ -15,27 +15,26 @@ body {
 }
 h1 {
   color: #00ff7f;
-  font-size: 1.4em;
+  font-size: 1.5em;
   border-bottom: 1px solid #00ff7f;
   display: inline-block;
   padding-bottom: 4px;
-  margin-bottom: 15px;
-}
-#nextPrayer {
-  font-size: 1.1em;
-  color: #80ffb3;
-  margin-bottom: 5px;
-}
-#timeleft {
-  font-size: 3em;
-  color: #00ff9d;
-  font-weight: bold;
-  margin: 10px 0;
+  margin-bottom: 20px;
 }
 #clock {
-  font-size: 1.2em;
+  font-size: 2em;
+  margin-top: 10px;
+  color: #00ffaa;
+}
+#timeleft {
+  font-size: 1.3em;
+  margin-top: 6px;
   color: #00ff7f;
-  margin-top: 5px;
+}
+#nextPrayer {
+  font-size: 1em;
+  color: #80ffb3;
+  margin-bottom: 20px;
 }
 .card {
   border: 1px solid #00ff7f;
@@ -43,7 +42,7 @@ h1 {
   padding: 15px;
   background: rgba(0, 255, 127, 0.05);
   max-width: 420px;
-  margin: 15px auto;
+  margin: 10px auto;
   text-align: left;
 }
 label {
@@ -102,10 +101,9 @@ th {
 </head>
 <body>
 <h1>🕌 JAM SHOLAT ONLINE</h1>
-
-<div id="nextPrayer">Menunggu data...</div>
-<div id="timeleft">00:00:00</div>
 <div id="clock">00:00:00</div>
+<div id="timeleft">Menunggu data...</div>
+<div id="nextPrayer"></div>
 
 <div class="card">
   <label>Kota</label>
@@ -188,17 +186,17 @@ function applyAdjustments(t){
 
 function updateClock(){
   const n=new Date();
-  el('clock').textContent = "Waktu sekarang: " + n.toLocaleTimeString('id-ID', { hour12:false });
+  el('clock').textContent = n.toLocaleTimeString('id-ID', { hour12:false });
 }
 setInterval(updateClock,1000);
 
 function updateTimeLeft(next){
   const now=new Date();
   const diff=next.at-now;
-  if(diff<=0){el('timeleft').textContent='00:00:00';return;}
+  if(diff<=0){el('timeleft').textContent='Masuk waktu sholat berikutnya';return;}
   const t=Math.floor(diff/1000),h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=t%60;
   const txt=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  el('timeleft').textContent=txt;
+  el('timeleft').textContent=`Menuju ${next.key}: ${txt}`;
   el('nextPrayer').textContent=`Sholat berikutnya: ${next.key}`;
 }
 
