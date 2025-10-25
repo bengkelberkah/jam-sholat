@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Aplikasi Jam Sholat Online</title>
+<style>
+body {
+  font-family: sans-serif;
+  background: #0b1220;
+  color: #fff;
+  padding: 20px;
+}
+.card {
+  background: #121a2b;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button.primary {
+  background: #22c55e;
+  color: #072b16;
+  font-weight: bold;
+}
+.alert {
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+.alert.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+.alert.info {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+#clock {
+  font-size: 1.5em;
+  margin: 10px 0;
+}
+#timeleft {
+  font-size: 1.5em;
+  color: #9ab0c9;
+  margin-top: 4px;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+<h1>🕌 Aplikasi Jam Sholat</h1>
+<p>Pilih lokasi manual menggunakan Kota & Negara atau masukkan Koordinat.</p>
+
+<div id="clock">00:00:00</div>
+<div id="timeleft">Menunggu data...</div>
+
+<div class="card">
+  <label>Kota</label>
+  <input id="city" placeholder="Contoh: Bandung" />
+  <label>Negara</label>
+  <input id="country" placeholder="Contoh: Indonesia" />
+  <label>Latitude</label>
+  <input id="lat" placeholder="Contoh: -6.9147" />
+  <label>Longitude</label>
+  <input id="lon" placeholder="Contoh: 107.6098" />
+
+  <label>Metode Perhitungan</label>
+  <select id="method">
+    <option value="12">Syafi'i (University of Islamic Sciences, Karachi)</option>
+    <option value="1">Hanafi (Muslim World League)</option>
+    <option value="3">Islamic Modern (ISNA)</option>
+    <option value="4">Umm Al-Qura, Makkah</option>
+  </select>
+
+  <label>Madhab (Ashar)</label>
+  <select id="madhab">
+    <option value="0">Shafi'i</option>
+    <option value="1">Hanafi</option>
+  </select>
+
+  <h3>Penyesuaian (menit)</h3>
+  <p><small>Tambahkan atau kurangi menit untuk menyesuaikan waktu sholat sesuai preferensi lokal.</small></p>
+
+  <label>Fajr</label><input id="adjFajr" type="number" value="0" />
+  <label>Dhuhr</label><input id="adjDhuhr" type="number" value="0" />
+  <label>Asr</label><input id="adjAsr" type="number" value="0" />
+  <label>Maghrib</label><input id="adjMaghrib" type="number" value="0" />
+  <label>Isha</label><input id="adjIsha" type="number" value="0" />
+
+  <button class="primary" id="btnLoad">Tampilkan Waktu</button>
+</div>
+
+<div id="alert" class="alert info" style="display:none"></div>
+<table id="times" style="width:100%;color:#9ab0c9;margin-top:10px"></table>
+
+<script>
+const el = id => document.getElementById(id);
+const alertBox = el('alert');
+function showAlert(type, msg) {
+  alertBox.className = 'alert ' + type;
+  alertBox.style.display = 'block';
+  alertBox.textContent = msg;
+}
+function clearAlert() {
+  alertBox.style.display = 'none';
+}
+function stripTZ(s) {
+  return (s || '').toString().match(/\d{1,2}:\d{2}/)?.[0] || s;
+}
+function composeDateTime(timeStr) {
+  const [h, m] = stripTZ(timeStr).split(':').map(Number);
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h || 0, m || 0, 0);
+}
+function adjustTime(timeStr, offset) {
+  const dt = composeDateTime(timeStr);
+  dt.setMinutes(dt.getMinutes() + offset);
+  return `${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+}
+function computeNext(t) {
+  const order = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
+  const now = Date.now();
+  for (const key of order) {
+    const dt = composeDateTime(t[key]);
+    if (dt.getTime() > now + 1000) return {key, at: dt};
+  }
+  const tomorrow = new Date(Date.now() + 86400000);
+  const [h,m] = stripTZ(t['Fajr']).split(':').map(Number);
+  const dt = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), h||0, m||0, 0);
+  return {key:'Fajr', at:dt};
+}
+
+async function fetchByCity(city,country,method,madhab){
+  const url=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}&madhab=${madhab}`;
+  const r=await fetch(url);
+  const j=await r.json();
+  if(j.code!==200) throw new Error('Gagal mengambil data');
+  return j.data;
+}
+
+async function fetchByCoords(lat,lon,method,madhab){
+  const url=`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=${method}&madhab=${madhab}`;
+  const r=await fetch(url);
+  const j=await r.json();
+  if(j.code!==200) throw new Error('Gagal mengambil data');
+  return j.data;
+}
+
+function applyAdjustments(t){
+  return {
+    Fajr:adjustTime(t.Fajr,Number(el('adjFajr').value||0)),
+    Sunrise:t.Sunrise,
+    Dhuhr:adjustTime(t.Dhuhr,Number(el('adjDhuhr').value||0)),
+    Asr:adjustTime(t.Asr,Number(el('adjAsr').value||0)),
+    Maghrib:adjustTime(t.Maghrib,Number(el('adjMaghrib').value||0)),
+    Isha:adjustTime(t.Isha,Number(el('adjIsha').value||0))
+  };
+}
+
+let currentClock = '00:00:00';
+let currentCountdown = '00:00:00';
+let nextPrayerName = '-';
+
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  currentClock = `${h}:${m}:${s}`;
+  el('clock').textContent = `Waktu sekarang: ${currentClock}`;
+}
+setInterval(updateClock, 1000);
+
+function updateTimeLeft(next) {
+  const now = new Date();
+  const diff = next.at - now;
+  if (diff <= 0) {
+    el('timeleft').textContent = 'Sudah masuk waktu sholat berikutnya.';
+    return;
+  }
+  const totalSeconds = Math.floor(diff / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  currentCountdown = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el('timeleft').textContent = `Menuju ${next.key}: ${currentCountdown}`;
+  nextPrayerName = next.key;
+}
+
+let countdownInterval;
+
+function updateUI(data){
+  let t=data.timings;
+  t=applyAdjustments(t);
+  let html='<tr><th>Waktu</th><th>Jam</th></tr>';
+  for(const [k,v] of Object.entries(t)){
+    html+=`<tr><td>${k}</td><td>${stripTZ(v)}</td></tr>`;
+  }
+  el('times').innerHTML=html;
+  showAlert('info','Jadwal berhasil dimuat.');
+  const next=computeNext(t);
+  clearInterval(countdownInterval);
+  updateTimeLeft(next);
+  countdownInterval=setInterval(()=>{
+    updateTimeLeft(next);
+    sendToM5(); // kirim data ke M5
+  },1000);
+}
+
+// 🔗 Fungsi kirim ke M5Core Ink lewat internet
+const M5CORE_URL = "http://192.168.0.150/update"; // ubah ke IP M5Core Ink kamu atau URL ngrok
+
+async function sendToM5(){
+  try {
+    const payload = { 
+      clock: currentClock,
+      countdown: currentCountdown,
+      next: nextPrayerName
+    };
+    await fetch(M5CORE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.log("Gagal kirim ke M5:", err);
+  }
+}
+
+el('btnLoad').addEventListener('click', async ()=>{
+  clearAlert();
+  const city=el('city').value.trim();
+  const country=el('country').value.trim();
+  const lat=el('lat').value.trim();
+  const lon=el('lon').value.trim();
+  const method=el('method').value;
+  const madhab=el('madhab').value;
+  try {
+    let data;
+    if(city && country) data = await fetchByCity(city,country,method,madhab);
+    else if(lat && lon){
+      const latNum=Number(lat), lonNum=Number(lon);
+      if(Number.isNaN(latNum)||Number.isNaN(lonNum)) throw new Error('Koordinat tidak valid.');
+      data=await fetchByCoords(latNum,lonNum,method,madhab);
+    } else throw new Error('Isi Kota & Negara atau Koordinat.');
+    updateUI(data);
+  } catch(e){
+    showAlert('error', e.message || 'Terjadi kesalahan.');
+  }
+});
+</script>
+</body>
+</html>
