@@ -6,70 +6,146 @@
 <title>Jam Sholat Sinkron Firebase</title>
 <style>
 body {
-  font-family: 'Arial', sans-serif;
+  font-family: "Courier New", monospace;
   background: #000;
-  color: #0f0;
-  text-align: center;
+  color: #00ff7f;
   margin: 0;
-  padding: 10px;
+  padding: 20px;
+  text-align: center;
 }
-h1 {font-size: 1.3em; color: #0ff;}
-#clock {font-size: 2.5em; margin: 10px 0; font-weight: bold;}
-#timeleft {font-size: 1.3em; margin-bottom: 15px;}
-#nextPrayer {font-size: 1.1em; color: #fff;}
-table {width: 100%; color: #0f0; font-size: 0.9em; border-collapse: collapse; margin-top: 10px;}
-td, th {border: 1px solid #0f0; padding: 5px;}
-button {background: #0f0; color: #000; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;}
-button:active {background: #0c0;}
+h1 {
+  color: #00ff7f;
+  font-size: 1.5em;
+  border-bottom: 1px solid #00ff7f;
+  display: inline-block;
+  padding-bottom: 4px;
+  margin-bottom: 20px;
+}
+#clock {
+  font-size: 2em;
+  margin-top: 10px;
+  color: #00ffaa;
+}
+#timeleft {
+  font-size: 1.3em;
+  margin-top: 6px;
+  color: #00ff7f;
+}
+#nextPrayer {
+  font-size: 1em;
+  color: #80ffb3;
+  margin-bottom: 20px;
+}
+.card {
+  border: 1px solid #00ff7f;
+  border-radius: 10px;
+  padding: 15px;
+  background: rgba(0, 255, 127, 0.05);
+  max-width: 420px;
+  margin: 10px auto;
+  text-align: left;
+}
+label {
+  font-weight: bold;
+  color: #00ff7f;
+  display: block;
+  margin-top: 8px;
+}
 input, select {
-  margin: 5px; padding: 5px;
-  width: 90%; border-radius: 5px;
-  border: 1px solid #0f0; background: #000; color: #0f0;
+  width: 100%;
+  padding: 7px;
+  margin-top: 4px;
+  border: 1px solid #00ff7f;
+  border-radius: 5px;
+  background: #000;
+  color: #00ff7f;
+  font-size: 0.9em;
 }
-.small {font-size: 0.8em; color: #888;}
+button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 10px;
+  border: 1px solid #00ff7f;
+  border-radius: 6px;
+  background: #001a0a;
+  color: #00ff7f;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:hover {
+  background: #003319;
+}
+table {
+  width: 100%;
+  max-width: 420px;
+  margin: 20px auto;
+  border-collapse: collapse;
+  border: 1px solid #00ff7f;
+}
+th, td {
+  border: 1px solid #00ff7f;
+  padding: 6px;
+  text-align: center;
+  color: #baffd9;
+}
+th {
+  background: #003319;
+  color: #00ff7f;
+}
+.small {
+  font-size: 0.8em;
+  color: #00cc66;
+  margin-top: 10px;
+}
 </style>
 </head>
 <body>
-<h1>🕌 JAM SHOLAT SINKRON ONLINE</h1>
+<h1>🕌 JAM SHOLAT ONLINE</h1>
 <div id="clock">00:00:00</div>
 <div id="timeleft">Menunggu data...</div>
 <div id="nextPrayer"></div>
 
-<div>
-  <input id="city" placeholder="Kota (contoh: Bandung)" />
-  <input id="country" placeholder="Negara (contoh: Indonesia)" />
-  <input id="lat" placeholder="Latitude (contoh: -6.9147)" />
-  <input id="lon" placeholder="Longitude (contoh: 107.6098)" />
+<div class="card">
+  <label>Kota</label>
+  <input id="city" placeholder="Contoh: Bandung" />
+  <label>Negara</label>
+  <input id="country" placeholder="Contoh: Indonesia" />
+  <label>Latitude</label>
+  <input id="lat" placeholder="Contoh: -6.9147" />
+  <label>Longitude</label>
+  <input id="lon" placeholder="Contoh: 107.6098" />
+
+  <label>Metode Perhitungan</label>
   <select id="method">
     <option value="12">Syafi'i (Karachi)</option>
     <option value="1">Hanafi (MWL)</option>
     <option value="3">ISNA</option>
     <option value="4">Umm Al-Qura</option>
   </select>
+
+  <label>Madhab (Asar)</label>
   <select id="madhab">
     <option value="0">Shafi'i</option>
     <option value="1">Hanafi</option>
   </select>
 
   <h3>Penyesuaian Waktu (menit)</h3>
-  <input id="adjFajr" type="number" placeholder="Fajr" />
-  <input id="adjDhuhr" type="number" placeholder="Dhuhr" />
-  <input id="adjAsr" type="number" placeholder="Asr" />
-  <input id="adjMaghrib" type="number" placeholder="Maghrib" />
-  <input id="adjIsha" type="number" placeholder="Isha" />
+  <label>Fajr</label><input id="adjFajr" type="number" value="0" />
+  <label>Dhuhr</label><input id="adjDhuhr" type="number" value="0" />
+  <label>Asr</label><input id="adjAsr" type="number" value="0" />
+  <label>Maghrib</label><input id="adjMaghrib" type="number" value="0" />
+  <label>Isha</label><input id="adjIsha" type="number" value="0" />
 
   <button id="btnLoad">Tampilkan & Simpan</button>
 </div>
 
 <table id="times"></table>
-<p class="small">Auto sync ke Firebase + update setiap hari</p>
+<p class="small">Data otomatis tersinkron antar perangkat melalui Firebase</p>
 
 <script type="module">
-// === Firebase ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
-// Firebase configuration kamu
 const firebaseConfig = {
   apiKey: "AIzaSyBdkkgnyBXUBBCYszktz8SRxfQ5COtjqfI",
   authDomain: "jam-sholat-2893a.firebaseapp.com",
@@ -85,21 +161,13 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const el = id => document.getElementById(id);
-let currentClock = '00:00:00';
-let currentCountdown = '00:00:00';
-let nextPrayerName = '-';
 let countdownInterval;
 
-// === Fungsi dasar ===
 function stripTZ(s){return (s||'').toString().match(/\d{1,2}:\\d{2}/)?.[0]||s;}
 function composeDateTime(t){const[h,m]=stripTZ(t).split(':').map(Number);const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate(),h,m,0);}
 function adjustTime(t,o){const d=composeDateTime(t);d.setMinutes(d.getMinutes()+o);return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;}
 function computeNext(t){const k=['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];const now=Date.now();for(const key of k){const d=composeDateTime(t[key]);if(d.getTime()>now)return{key,at:d};}const tm=new Date(Date.now()+86400000);const[h,m]=stripTZ(t['Fajr']).split(':').map(Number);return{key:'Fajr',at:new Date(tm.getFullYear(),tm.getMonth(),tm.getDate(),h,m,0)};}
 
-async function fetchByCoords(lat,lon,method,madhab){
-  const url=`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lon}&method=${method}&madhab=${madhab}`;
-  const r=await fetch(url);const j=await r.json();if(j.code!==200)throw new Error('Gagal ambil data');return j.data;
-}
 async function fetchByCity(city,country,method,madhab){
   const url=`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}&madhab=${madhab}`;
   const r=await fetch(url);const j=await r.json();if(j.code!==200)throw new Error('Gagal ambil data');return j.data;
@@ -118,11 +186,7 @@ function applyAdjustments(t){
 
 function updateClock(){
   const n=new Date();
-  const h=String(n.getHours()).padStart(2,'0');
-  const m=String(n.getMinutes()).padStart(2,'0');
-  const s=String(n.getSeconds()).padStart(2,'0');
-  currentClock=`${h}:${m}:${s}`;
-  el('clock').textContent=currentClock;
+  el('clock').textContent = n.toLocaleTimeString('id-ID', { hour12:false });
 }
 setInterval(updateClock,1000);
 
@@ -131,10 +195,9 @@ function updateTimeLeft(next){
   const diff=next.at-now;
   if(diff<=0){el('timeleft').textContent='Masuk waktu sholat berikutnya';return;}
   const t=Math.floor(diff/1000),h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=t%60;
-  currentCountdown=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  el('timeleft').textContent=`Menuju ${next.key}: ${currentCountdown}`;
+  const txt=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el('timeleft').textContent=`Menuju ${next.key}: ${txt}`;
   el('nextPrayer').textContent=`Sholat berikutnya: ${next.key}`;
-  nextPrayerName=next.key;
 }
 
 function updateUI(data){
@@ -177,7 +240,6 @@ onValue(ref(db,'settings/'), async (snapshot)=>{
   try{
     let data;
     if(s.city && s.country) data=await fetchByCity(s.city,s.country,s.method,s.madhab);
-    else if(s.lat && s.lon) data=await fetchByCoords(s.lat,s.lon,s.method,s.madhab);
     updateUI(data);
   }catch(e){console.error('Gagal ambil data:',e);}
 });
@@ -188,14 +250,11 @@ el('btnLoad').addEventListener('click', async ()=>{
   const s={
     city:el('city').value.trim(),
     country:el('country').value.trim(),
-    lat:el('lat').value.trim(),
-    lon:el('lon').value.trim(),
     method:el('method').value,
     madhab:el('madhab').value
   };
   let data;
   if(s.city&&s.country)data=await fetchByCity(s.city,s.country,s.method,s.madhab);
-  else if(s.lat&&s.lon)data=await fetchByCoords(s.lat,s.lon,s.method,s.madhab);
   updateUI(data);
   alert('✅ Setting tersimpan & disinkronkan ke semua perangkat!');
 });
